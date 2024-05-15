@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "../store/userSlice";
+import OAuth from "../components/OAuth";
 const SignIn = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -55,6 +56,7 @@ const SignIn = () => {
         >
           {isSubmitting ? "Loading..." : "Sign In"}
         </button>
+        <OAuth />
       </form>
       <div className="flex gap-2 mt-5">
         <p>Have no account yet?</p>
