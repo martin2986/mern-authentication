@@ -15,11 +15,16 @@ const developmentErrors = (error, req, res, next) => {
 };
 const handleValidationError = (err) => {
   const message = `Required fields are not supplied`;
-
   return new AppError(message, 400);
 };
 const handleCastError = (err) => {
   const message = `Invalid ${err.path}: ${err.value}`;
+  return new AppError(message, 400);
+};
+
+const handleDuplicateError = (err) => {
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const message = `Duplicate field value: ${value}. Name already exist.`;
 
   return new AppError(message, 400);
 };
@@ -39,6 +44,7 @@ export const errorHandler = (err, req, res, next) => {
 
   if (err.name === "CastError") err = handleCastError(err);
   if (err.name == "ValidationError") err = handleValidationError(err);
+  if (err.code == 11000) err = handleDuplicateError(err);
   res.status(err.statusCode).json({
     success: false,
     status: err.status,
