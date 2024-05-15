@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
+import OAuth from "../components/OAuth";
 const SignUp = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -18,6 +20,7 @@ const SignUp = () => {
     try {
       const response = await axios.post("/api/auth/signup", data);
       console.log(response.data);
+      navigate("/sign-in");
     } catch (err) {
       setError("root", {
         message: err.response.data.message || "An error occurred during login.",
@@ -59,6 +62,7 @@ const SignUp = () => {
         >
           {isSubmitting ? "Loading..." : "Sign Up"}
         </button>
+        <OAuth />
       </form>
       <div className="flex gap-2 mt-5">
         <p>Have an account?</p>
