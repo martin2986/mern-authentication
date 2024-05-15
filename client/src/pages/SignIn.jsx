@@ -1,8 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { signInSuccess } from "../store/userSlice";
 const SignIn = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -17,7 +20,7 @@ const SignIn = () => {
   const onSubmit = async (data) => {
     try {
       const response = await axios.post("/api/auth/signin", data);
-      console.log(response.data);
+      dispatch(signInSuccess(response.data));
       navigate("/");
     } catch (err) {
       setError("root", {
