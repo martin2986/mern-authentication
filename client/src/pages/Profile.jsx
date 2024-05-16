@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { updateUserSuccess } from "../store/userSlice.js";
+import {
+  deleteUserSuccess,
+  SignOutUserSuccess,
+  updateUserSuccess,
+} from "../store/userSlice.js";
 import {
   getDownloadURL,
   getStorage,
@@ -58,25 +62,22 @@ const Profile = () => {
 
   const handleDeleteAccount = async () => {
     try {
-      // dispatch(deleteUserStart());
       const res = await axios.delete(
         `/api/user/delete/${currentUser.data._id}`
       );
-      if (res.data.success === false) {
-        // dispatch(deleteUserFailure(data));
-        return;
-      }
-      // dispatch(deleteUserSuccess(data));
+      if (res.data.success === false) return;
+      dispatch(deleteUserSuccess());
     } catch (error) {
-      // dispatch(deleteUserFailure(error));
+      throw new Error(error?.errMsg || "Error deleting your account");
     }
   };
   const handleSignOut = async () => {
     try {
-      await fetch("/api/auth/signout");
-      // dispatch(signOut())
+      await axios.get("/api/auth/signout");
+      dispatch(SignOutUserSuccess());
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      throw new Error("An error occor signing out!");
     }
   };
 
