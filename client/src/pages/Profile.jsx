@@ -5,6 +5,11 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  deleteUserSuccess,
+  SignOutUserSuccess,
+  updateUserSuccess,
+} from "../store/userSlice.js";
+import {
   getDownloadURL,
   getStorage,
   ref,
@@ -23,7 +28,7 @@ const Profile = () => {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitSuccessful, isSubmitting },
   } = useForm();
 
   useEffect(() => {
@@ -42,7 +47,6 @@ const Profile = () => {
       (snapshot) => {
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        // console.log(`Upload is ${progress}% done`);
         setImagePercent(Math.round(progress));
       },
       (error) => {
@@ -56,34 +60,46 @@ const Profile = () => {
     );
   };
 
-  console.log(imageData);
   const handleDeleteAccount = async () => {
     try {
-      // dispatch(deleteUserStart());
       const res = await axios.delete(
         `/api/user/delete/${currentUser.data._id}`
       );
-      if (res.data.success === false) {
-        // dispatch(deleteUserFailure(data));
-        return;
-      }
-      // dispatch(deleteUserSuccess(data));
+      if (res.data.success === false) return;
+      dispatch(deleteUserSuccess());
     } catch (error) {
-      // dispatch(deleteUserFailure(error));
+      throw new Error(error?.errMsg || "Error deleting your account");
     }
   };
   const handleSignOut = async () => {
     try {
-      await fetch("/api/auth/signout");
-      // dispatch(signOut())
+      await axios.get("/api/auth/signout");
+      dispatch(SignOutUserSuccess());
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      throw new Error("An error occor signing out!");
     }
   };
 
-  const onSubmit = (data) => {
-    console.log(data);
-    console.log(image);
+  const onSubmit = async (data) => {
+    try {
+      const res = await axios.patch(
+        `/api/user/update/${currentUser.data._id}`,
+        {
+          username: data?.username,
+          email: data?.email,
+          password: data?.password,
+          profilePhoto: imageData.profilePhoto,
+        }
+      );
+      dispatch(updateUserSuccess(res.data));
+    } catch (err) {
+      setError("root", {
+        message:
+          err.response.data.message ||
+          "An error occurred while updating you info",
+      });
+    }
   };
   return (
     <div className="p-3 max-w-lg mx-auto">
@@ -125,7 +141,6 @@ const Profile = () => {
           name="username"
           placeholder="Username"
           className="bg-slate-100 rounded-lg p-3"
-          // onChange={handleChange}
         />
         <input
           defaultValue={currentUser.data.email}
@@ -145,8 +160,7 @@ const Profile = () => {
           className="bg-slate-100 rounded-lg p-3"
         />
         <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-          {/* {loading ? 'Loading...' : 'Update'} */}
-          Update
+          {isSubmitting ? "Loading..." : "Update"}
         </button>
       </form>
       <div className="flex justify-between mt-5">
@@ -160,10 +174,14 @@ const Profile = () => {
           Sign out
         </span>
       </div>
-      {/* <p className='text-red-700 mt-5'>{error && 'Something went wrong!'}</p> */}
-      {/* <p className='text-green-700 mt-5'>
-    {updateSuccess && 'User is updated successfully!'}
-  </p> */}
+      {errors.root && (
+        <div className="text-red-500 text-sm mb-4">
+          {errors.root.message || "Something went wrong"}
+        </div>
+      )}
+      <p className="text-green-700 mt-5">
+        {isSubmitSuccessful && "User is updated successfully!"}
+      </p>
     </div>
   );
 };
